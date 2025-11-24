@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarBid Kenya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <header>
+        <h1>CarBid Kenya</h1>
+        <p>Bid your way to owning the car of your dreams</p>
+    </header>
+
+    <main>
+       <div class="cars-container">
+            {% for car in cars %}
+            <div class="car-card" data-car-id="{{ car[0] }}" data-end-time="{{ car[5] }}">
+                <img src="{{ car[2] }}" alt="{{ car[1] }}">
+                <h2>{{ car[1] }}</h2>
+                <p>{{ car[3] }}</p>
+                <p class="price">Base Price: KES {{ "{:,}".format(car[4]) }}</p>
+
+                <div class="countdown" id="timer-{{ car[0] }}"></div>
+                <p class="highest-bid">Highest Bid: KES <span id="highest-{{ car[0] }}">0</span></p>
+                <p class="bidders">Total Bidders: <span id="bidders-{{ car[0] }}">0</span></p>
+
+                <form class="bid-form">
+                    <input type="text" name="username" placeholder="Enter username" required>
+                    <input type="number" name="bid_amount" placeholder="Enter bid amount (KES)" required>
+                    <input type="hidden" name="car_id" value="{{ car[0] }}">
+                    <button type="submit">Place Bid</button>
+                </form>
+                <p class="message"></p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; CarBid Kenya</p>
+    </footer>
+</body>
+</html>
