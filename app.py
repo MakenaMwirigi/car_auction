@@ -30,3 +30,16 @@ def init_db():
                     FOREIGN KEY(user_id) REFERENCES users(id),
                     FOREIGN KEY(car_id) REFERENCES cars(id))''')
 
+
+    c.execute("SELECT COUNT(*) FROM cars")
+    if c.fetchone()[0] == 0:
+        end_time = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+        cars = [
+            ("Toyota Supra", "static/images/toyota_supra.jpg", "3.0L Turbo Coupe", 6500000, end_time),
+            ("Subaru Impreza WRX", "static/images/subaru_impreza.jpg", "Rally Edition Turbo", 3200000, end_time),
+            ("Land Cruiser V8", "static/images/landcruiser_v8.jpg", "Luxury Offroader", 10800000, end_time)
+        ]
+        c.executemany("INSERT INTO cars (name, image, description, base_price, end_time) VALUES (?,?,?,?,?)", cars)
+        
+        conn.commit()
+        conn.close()
