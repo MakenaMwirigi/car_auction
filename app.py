@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 from datetime import datetime, timedelta
+import os
 
 app = Flask(__name__)
 
 def init_db():
+    os.makedirs("database", exist_ok=True)
     conn = sqlite3.connect('database/cars.db')
     c = conn.cursor()
 
@@ -31,18 +33,25 @@ def init_db():
                     FOREIGN KEY(car_id) REFERENCES cars(id))''')
 
 
+    new_end_time = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+
     c.execute("SELECT COUNT(*) FROM cars")
-    if c.fetchone()[0] == 0:
-        end_time = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    count = c.fetchone()[0]
+
+    if count > 0:
+        c.execute("UPDATE cars SET end_time = ?", (new_end_time,))
+    else:
+
         cars = [
-            ("Toyota Supra", "static/images/toyota_supra.jpg", "3.0L Turbo Coupe", 6500000, end_time),
-            ("Subaru Impreza WRX", "static/images/subaru_impreza.jpg", "Rally Edition Turbo", 3200000, end_time),
-            ("Land Cruiser V8", "static/images/landcruiser_v8.jpg", "Luxury Offroader", 10800000, end_time)
+            ("Toyota Supra", "static/images/toyota_supra.jpg", "3.0L Turbo Coupe", 6500000, new_end_time),
+            ("Subaru Impreza WRX", "static/images/subaru_impreza.jpg", "Rally Edition Turbo", 3200000, new_end_time),
+            ("Land Cruiser V8", "static/images/landcruiser_v8.jpg", "Luxury Offroader", 10800000, new_end_time)
         ]
         c.executemany("INSERT INTO cars (name, image, description, base_price, end_time) VALUES (?,?,?,?,?)", cars)
-        
-        conn.commit()
-        conn.close()
+
+    conn.commit()
+    conn.close()
+
 
 @app.route('/')
 def index():
@@ -109,6 +118,28 @@ def get_bids(car_id):
         "highest_bid": highest_bid if highest_bid else 0
     })
 
+@app.route('/admin/reset')
+def reset_bids():
+    """Resets all bids and refreshes countdown timers (for demo use only)."""
+    conn = sqlite3.connect('database/cars.db')
+    c = conn.cursor()
+
+    # Delete all existing bids and users
+    c.execute("DELETE FROM bids")
+    c.execute("DELETE FROM users")
+
+    # Refresh countdown timers to 24 hours from now
+    new_end_time = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    c.execute("UPDATE cars SET end_time = ?", (new_end_time,))
+
+    conn.commit()
+    conn.close()
+
+    return "<h2>✅ Bids and users reset successfully. Timers refreshed to 24h from now.</h2><p>Return to <a href='/'>Home</a></p>"
+
+
 if __name__ == '__main__':
+    print(">>> Flask running from:", os.path.abspath(__file__))
+
     init_db()
     app.run(debug=True)
